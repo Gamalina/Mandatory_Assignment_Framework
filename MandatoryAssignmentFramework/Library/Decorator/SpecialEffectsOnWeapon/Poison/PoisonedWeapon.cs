@@ -8,36 +8,29 @@ using System.Threading.Tasks;
 
 namespace MandatoryAssignmentFramework.Library.SpecialEffectsOnWeapon
 {
-    public class PoisonedWeapon : IAttack
+    public class PoisonedWeapon : AttackItem
     {
-        private readonly IAttack _weapon;
-        private readonly ICreature _creature;
+
+        
+        
         private readonly int _poisonDuration;
         private readonly int _poisonDamage;
 
-        public PoisonedWeapon(IAttack weapon, int poisonDuration, int poisonDamage)
+        
+        public PoisonedWeapon(AttackItem attackitem, int poisonDuration, int poisonDamage) : base("Poison Dagger", "A dagger with poisonous effect.", 20, 0, 242, 122, true)
         {
-            _weapon = weapon;
+
             _poisonDuration = poisonDuration;
             _poisonDamage = poisonDamage;
         }
 
-        public int Range => _weapon.Range;
+        public new int Range => base.Range;
 
-        public int Damage => _weapon.Damage + _poisonDamage;
+        public new int Damage => _poisonDamage;
         public int Duration => _poisonDuration;
 
-        public string Name => $"Poisoned {_weapon.Name}";
+        public new string Name => $"Poisoned {base.Name}";
 
-        public string Description => $"{_weapon.Description}, but also poisons the target for {_poisonDuration} turns, dealing {_poisonDamage} damage per turn.";
-
-        public void Attack(ICreature target)
-        {
-            _creature.Hit(target);
-
-            // Add poison effect to target
-            var poisonEffect = new PoisonEffect(_poisonDuration, _poisonDamage);
-            target.Effects.Add(poisonEffect);
-        }
+        public new string Description => $"{base.Description}which poisons the target for {_poisonDuration} turns, dealing {_poisonDamage} damage per turn.";
     }
 }

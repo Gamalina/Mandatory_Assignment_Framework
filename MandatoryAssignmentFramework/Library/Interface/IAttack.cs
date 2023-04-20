@@ -31,6 +31,6 @@ namespace MandatoryAssignmentFramework.Library.Interface
         /// </summary>
         string Description { get; }
 
-        void Attack(ICreature target);
+        //void Attack(ICreature target);
     }
 }

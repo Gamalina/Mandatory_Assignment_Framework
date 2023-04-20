@@ -3,9 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace MandatoryAssignmentFramework.Library
 {
@@ -14,10 +16,12 @@ namespace MandatoryAssignmentFramework.Library
     /// </summary>
     public class World : IWorld
     {
+        // Open/Closed Principle --- Closed Right Now, Opens in Constructor
         private readonly IConfiguration _configuration;
         private readonly ILogger<World> _logger;
         private readonly List<ICreature> _creatures;
         private readonly List<IWorldObject> _worldObjects;
+        
         /// <summary>
         /// Gets or sets the maximum X-coordinate of the world.
         /// </summary>
@@ -34,11 +38,19 @@ namespace MandatoryAssignmentFramework.Library
         /// Gets or sets a list of objects in the world.
         /// </summary>
         public List<IWorldObject> WorldObjects { get { return _worldObjects; } set { } }
+
+        //public List<WorldObject> GetObjectsAtPosition(Creature creature)
+        //{
+        //    var items = _items.Where(item => item.X == creature.X && item.Y == creature.Y);
+        //    return items.ToList();
+        //}
         /// <summary>
         /// Creates a new instance of the World class with the specified configuration and logger.
         /// </summary>
         /// <param name="configuration">The configuration to use for the world.</param>
         /// <param name="logger">The logger to log for the world.</param>
+        // Open Principle 
+
         public World(IConfiguration configuration, ILogger<World> logger)
         {
             _configuration = configuration;
@@ -51,15 +63,9 @@ namespace MandatoryAssignmentFramework.Library
             MaxY = Convert.ToInt32(_configuration.GetSection("World")["SizeY"]);
             //MaxX = (int)_configuration.GetType().GetProperty(GetType().Name).GetValue("World:SizeX");
             //MaxY = _configuration.GetValue<int>("World:SizeY");
-            
-            
-            // For testing purpose
-            AddCreature(player1);
+
+
         }
-        /// <summary>
-        /// Test Creature 
-        /// </summary>
-        Creature player1 = new Creature("Player1", 200, 10, 5, 0, 0);
 
         /// <summary>
         /// Adds a creature to the world.

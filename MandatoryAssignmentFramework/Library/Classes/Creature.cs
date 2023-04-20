@@ -1,27 +1,32 @@
 ﻿using MandatoryAssignmentFramework.Library.Classes;
 using MandatoryAssignmentFramework.Library.Decorator.Interface;
+using MandatoryAssignmentFramework.Library.Decorator.SpecialEffectsOnWeapon.Poison;
 using MandatoryAssignmentFramework.Library.Interface;
 using MandatoryAssignmentFramework.Library.SpecialEffectsOnWeapon;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace MandatoryAssignmentFramework.Library
 {
     /// <summary>
     /// Represents a creature in the world.
     /// </summary>
-    public class Creature : ICreature
+    public class Creature : WorldObject, ICreature
     {
+        Creature player;
         private List<IPickupObserver> _observers = new List<IPickupObserver>();
-
+        private List<WorldObject> _items = new List<WorldObject>();
         /// <summary>
         /// The name of the creature.
         /// </summary>
-        public string Name { get; set; }
+        public new string Name { get; set; }
         /// <summary>
         /// The hitpoints of the creature.
         /// </summary>
@@ -35,6 +40,10 @@ namespace MandatoryAssignmentFramework.Library
         /// </summary>
         public int DefensePoints { get; set; }
         /// <summary>
+        /// The range of the creatures attacks
+        /// </summary>
+        public int AttackRange { get; set; }
+        /// <summary>
         /// The X coordiantes of the creatures posistion in the world.
         /// </summary>
         public int X { get; set; }
@@ -45,17 +54,24 @@ namespace MandatoryAssignmentFramework.Library
         /// <summary>
         /// The list of attack items currently held by the creature.
         /// </summary>
+        public List<IAttack> AttackItemsList { get; set; }
         public List<IAttack> AttackItems { get; set; }
+        
         /// <summary>
         /// The list of defensive items currently held by the creature.
         /// </summary>
         public List<IDefenseItem> DefenseItems { get; set; }
         public List<Inventory> inventories { get; set; }
+        public Inventory Inventory { get; }
         /// <summary>
         /// The list of effects on the creature.
         /// </summary>
         public List<IEffect> Effects { get; set; }
-
+        public bool IsDead { get;  set; }
+        public bool weaponEquiped { get; set; }
+        public int currentWeaponDamage { get; set; }
+        List<IAttack> ICreature.AttackItems { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public string EquipedWeaponName { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the Creature class.
@@ -66,44 +82,67 @@ namespace MandatoryAssignmentFramework.Library
         /// <param name="defensePoints">The defense points of the creature.</param>
         /// <param name="x">The starting X coordinate of the creatures position in the world.</param>
         /// <param name="y">The starting Y coordinate of the creatures position in the world.</param>
-        public Creature(string name, int health, int attackPoints, int defensePoints, int x, int y)
+        public Creature(string name, string description, int health, int attackPoints, int defensePoints, bool isDead, int range, bool weaponEqupid, int x, int y) : base(name, description, x, y, true, true)
         {
             Name = name;
             HitPoints = health;
             AttackPoints = attackPoints;
             DefensePoints = defensePoints;
-            X = x;
-            Y = y;
+            AttackRange = range;
+            IsDead = isDead;
+            weaponEquiped = false;
             AttackItems = new List<IAttack>();
             DefenseItems = new List<IDefenseItem>();
-
-            // Testing
+            Inventory = new Inventory();
+            X = x;
+            Y = y;
             Effects = new List<IEffect>();
-            var inventory = new Inventory();
-            inventory.Capacity = 20;
-            var sword = new AttackItem("Sword", "A Handy Sword", 1, 10);
-            inventory.AddItem(sword);
-            var poisonSword = new AttackItem("PoisonedWeapon", "A Poisoned Weapon", 1, 10);
-            inventory.AddItem(poisonSword);
-            
+
+
         }
 
         /// <summary>
         /// Performs an attack on the target.
         /// </summary>
         /// <param name="target">The target of the attack.</param>
-        public void Hit(ICreature target)
+        public void Hit(ICreature target, Creature creature)
         {
-            // Calculate damage
-            int damage = AttackPoints;
-            foreach (var attackObject in AttackItems)
-            {
-                damage += attackObject.Damage;
-            }
-            
 
-            // Apply damage to target
-            target.ReceiveHit(damage);
+            if(weaponEquiped)
+            {
+                foreach(var item in Inventory.GetItems())
+                {
+                    if (item is AttackItem attackItem && attackItem.Name == EquipedWeaponName)
+                    {
+                        if(attackItem is PoisonedWeapon poisonedWeapon)
+                        {
+                            var poisonEffect = new PoisonEffect(poisonedWeapon.Duration, poisonedWeapon.Damage);
+                            Effects.Add(poisonEffect);
+                            // You left off here.
+                            int damageWithPoisonousWeapon = creature.AttackPoints + attackItem.Damage;
+                            currentWeaponDamage = damageWithPoisonousWeapon;
+                            target.ReceiveHit(currentWeaponDamage);
+                        }
+                    }
+                   
+                }
+            }
+            // Hit without weapon.
+            else
+            {
+                int damage2 = AttackPoints;
+                currentWeaponDamage = damage2;
+                target.ReceiveHit(10);
+            }
+
+            IEffect lastEffect = Effects.LastOrDefault();
+
+            // Apply the effect to the target
+            if (lastEffect != null)
+            {
+                lastEffect.ApplyEffect(target);
+            }
+
         }
         /// <summary>
         /// Receives a hit from the attacker.
@@ -111,37 +150,56 @@ namespace MandatoryAssignmentFramework.Library
         /// <param name="damage">The amount of damage received.</param>
         public void ReceiveHit(int damage)
         {
+
             // Calculate damage reduction
             int defense = DefensePoints;
             foreach (var defenseObject in DefenseItems)
             {
                 defense += defenseObject.Defense;
             }
-
             // Apply damage to health
-            HitPoints -= Math.Max(damage - defense, 0);
+            int remainingDamage = Math.Max(damage - defense, 0);
+            HitPoints -= remainingDamage;
+
+            // Check if the creature has died
+            if (HitPoints <= 0)
+            {
+                IsDead = true;
+            }
         }
         /// <summary>
         /// Picks of an object in the world and adds it to the lists of objects currently heldt.
         /// </summary>
         /// <param name="worldObject"></param>
-        public void Pick(IWorldObject worldObject)
+        public void Pick(AttackItem attack)
         {
-            if (worldObject is IAttack attackObject)
-            {
-                inventories.Add((Inventory)attackObject);
-                NotifyAttackItemPickedUp(attackObject);
+           
 
-            }
-            else if (worldObject is IDefenseItem defenseObject)
+            var items = _items.Where(item => item.X == player.X && item.Y == player.X);
+
+            foreach (var item in items.ToList())
             {
-                inventories.Add((Inventory)defenseObject);
-                NotifyDefensiveItemPickedUp(defenseObject);
+                if(item is AttackItem attackItem)
+                {
+                    player.Inventory.AddItem(attackItem);
+                    player.AttackItemsList.Add(attackItem);
+                    player.weaponEquiped = true;
+                    
+                    _items.Remove(attackItem);
+                    player.NotifyAttackItemPickedUp(attackItem);
+                }
+                else if(item is DefenseItem defenseItem)
+                {
+                    player.Inventory.AddItem(defenseItem);
+                    _items.Remove(defenseItem);
+                    player.NotifyDefensiveItemPickedUp(defenseItem);
+                }
             }
 
-            // Remove world object from world
-            // Needs implementents 
-            
+        }
+        public void EquipWeapon(AttackItem weapon)
+        {
+            EquipedWeaponName = weapon.Name;
         }
         /// <summary>
         /// Notification on picking up Attack item
@@ -164,6 +222,17 @@ namespace MandatoryAssignmentFramework.Library
             {
                 observer.OnDefenseItemPicked(defenseitem);
             }
+        }
+        /// <summary>
+        /// Moves the creature based on the X and Y Input
+        /// </summary>
+        /// <param name="xDelta">X input</param>
+        /// <param name="yDelta">Y input</param>
+        public void Move(int xDelta, int yDelta)
+        {
+            X += xDelta;
+            Y += yDelta;
+
         }
     }
 }

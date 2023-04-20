@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MandatoryAssignmentFramework.Library.Interface
 {
-    public interface IWorldObject
+    public interface IWorldObject : IPosition
     {
         /// <summary>
         /// The name of object
@@ -32,6 +32,10 @@ namespace MandatoryAssignmentFramework.Library.Interface
         /// The Y coordiante of the object's position in the world.
         /// </summary>
         int Y { get; set; }
-        
+
+        int Damage { get; set; }
+
+        int Range { get; set; }
+
     }
 }

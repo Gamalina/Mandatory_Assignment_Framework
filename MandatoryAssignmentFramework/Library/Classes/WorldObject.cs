@@ -11,7 +11,7 @@ namespace MandatoryAssignmentFramework.Library
     /// <summary>
     /// Represents an object in the world.
     /// </summary>
-    public class WorldObject : IWorldObject
+    public class WorldObject : IWorldObject, IPosition, IAttack
     {
         /// <summary>
         /// The name of the object.
@@ -38,6 +38,10 @@ namespace MandatoryAssignmentFramework.Library
         /// </summary>
         public bool IsLootable { get; set; }
 
+        public int Damage { get; set; }
+
+        public int Range { get; set; }
+
         /// <summary>
         /// Initializes a new instance of the WorldObject class.
         /// </summary>
@@ -50,6 +54,17 @@ namespace MandatoryAssignmentFramework.Library
         public WorldObject(string name, string description, int x, int y, bool isRemovable, bool isLootable)
         {
             Name = name;
+            X = x;
+            Y = y;
+            IsRemovable = isRemovable;
+            Description = description;
+            IsLootable = isLootable;
+        }
+        public WorldObject(string name, string description, int x, int y, bool isRemovable, bool isLootable, int damage, int range)
+        {
+            Name = name;
+            Damage = damage;
+            Range = range;
             X = x;
             Y = y;
             IsRemovable = isRemovable;

@@ -52,12 +52,13 @@ namespace MandatoryAssignmentFramework.Library.Interface
         /// Attacks another creature and caluclates the damage.
         /// </summary>
         /// <param name="creature">The creature to attack</param>
-        void Hit(ICreature creature);
+
+        void Hit(ICreature target, Creature creature);
         /// <summary>
         /// Picks up an object from the world.
         /// </summary>
         /// <param name="worldObject">The object to pick up</param>
-        void Pick(IWorldObject worldObject);
+        void Pick(AttackItem attack);
         /// <summary>
         /// Receives damage from an attack.
         /// </summary>

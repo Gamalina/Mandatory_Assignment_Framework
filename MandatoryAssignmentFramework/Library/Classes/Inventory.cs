@@ -16,7 +16,12 @@ namespace MandatoryAssignmentFramework.Library.Classes
         public Inventory()
         {
             _items = new List<IWorldObject>();
+            
+           Capacity = 5;
         }
+
+        
+
         public bool AddItem(IWorldObject item)
         {
             if (_items.Count >= Capacity)
@@ -36,6 +41,11 @@ namespace MandatoryAssignmentFramework.Library.Classes
         public IEnumerable<IWorldObject> GetItems()
         {
             return _items;
+        }
+
+        public static implicit operator List<object>(Inventory v)
+        {
+            throw new NotImplementedException();
         }
     }
 }
